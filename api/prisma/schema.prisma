@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  password  String
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  companyUsers CompanyUser[]
+
+  @@map("users")
+}
+
+model Company {
+  id                 Int       @id @default(autoincrement())
+  name               String
+  businessName       String?
+  rfc                String?   @unique
+  email              String?
+  phone              String?
+  address            String?
+  logo               String?
+  subscriptionStatus String    @default("trial")
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  companyUsers CompanyUser[]
+
+  @@map("companies")
+}
+
+model Role {
+  id          Int       @id @default(autoincrement())
+  name        String
+  slug        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  companyUsers CompanyUser[]
+
+  @@map("roles")
+}
+
+model CompanyUser {
+  id        Int      @id @default(autoincrement())
+  companyId Int?
+  userId    Int
+  roleId    Int
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company? @relation(fields: [companyId], references: [id])
+  user    User     @relation(fields: [userId], references: [id])
+  role    Role     @relation(fields: [roleId], references: [id])
+
+  @@unique([companyId, userId, roleId])
+  @@map("company_users")
+}
