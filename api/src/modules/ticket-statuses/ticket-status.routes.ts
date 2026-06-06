@@ -1,13 +1,14 @@
 import { Router } from 'express';
 import { TicketStatusController } from './ticket-status.controller';
+import { asyncHandler } from '../../utils/async-handler';
 
 const router = Router();
 const ticketStatusController = new TicketStatusController();
 
-router.post('/', ticketStatusController.create);
-router.get('/', ticketStatusController.findAll);
-router.get('/:id', ticketStatusController.findById);
-router.put('/:id', ticketStatusController.update);
-router.delete('/:id', ticketStatusController.delete);
+router.post('/', asyncHandler(ticketStatusController.create));
+router.get('/', asyncHandler(ticketStatusController.findAll));
+router.get('/:id', asyncHandler(ticketStatusController.findById));
+router.put('/:id', asyncHandler(ticketStatusController.update));
+router.delete('/:id', asyncHandler(ticketStatusController.delete));
 
 export default router;

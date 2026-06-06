@@ -1,13 +1,15 @@
 import {Router} from 'express';
 import {UserController} from './user.controller';
+import { asyncHandler } from '../../utils/async-handler';
+
 
 const router = Router();
 const userController = new UserController();
 
-router.post('/', userController.create);
-router.get('/', userController.findAll);
-router.get('/:id', userController.findById);
-router.put('/:id', userController.update);
-router.delete('/:id', userController.delete);
+router.post('/', asyncHandler(userController.create));
+router.get('/', asyncHandler(userController.findAll));
+router.get('/:id', asyncHandler(userController.findById));
+router.put('/:id', asyncHandler(userController.update));
+router.delete('/:id', asyncHandler(userController.delete));
 
 export default router;

@@ -7,12 +7,12 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(errorMiddleware);
 app.use('/api', routes);
 app.get('/', (req, res) => {
   res.json({
     message: 'API V-Ticket funcionando correctamente'
   });
 });
+app.use(errorMiddleware);
 
 export default app;

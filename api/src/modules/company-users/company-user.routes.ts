@@ -1,13 +1,14 @@
 import { Router } from 'express';
 import { CompanyUserController } from './company-user.controller';
+import { asyncHandler } from '../../utils/async-handler';
 
 const router = Router();
 const companyUserController = new CompanyUserController();
 
-router.post('/', companyUserController.create);
-router.get('/', companyUserController.findAll);
-router.get('/:id', companyUserController.findById);
-router.put('/:id', companyUserController.update);
-router.delete('/:id', companyUserController.delete);
+router.post('/', asyncHandler(companyUserController.create));
+router.get('/', asyncHandler(companyUserController.findAll));
+router.get('/:id', asyncHandler(companyUserController.findById));
+router.put('/:id', asyncHandler(companyUserController.update));
+router.delete('/:id', asyncHandler(companyUserController.delete));
 
 export default router;
