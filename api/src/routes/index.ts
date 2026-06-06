@@ -12,6 +12,8 @@ import { authMiddleware } from '../middlewares/auth.middleware';
 import ticketCategoryRoutes from '../modules/ticket-categories/ticket-category.routes';
 import ticketRoutes from '../modules/tickets/ticket.routes';
 import ticketCommentRoutes from '../modules/ticket-comments/ticket-comment.routes';
+import ticketHistoryRoutes from '../modules/ticket-history/ticket-history.routes';
+import ticketAttachmentRoutes from '../modules/ticket-attachments/ticket-attachment.routes';
 
 const router = Router();
 
@@ -28,5 +30,7 @@ router.use('/ticket-priorities', authMiddleware, ticketPriorityRoutes);
 router.use('/ticket-categories', authMiddleware, ticketCategoryRoutes);
 router.use('/tickets', authMiddleware, ticketRoutes);
 router.use('/ticket-comments', authMiddleware, ticketCommentRoutes);
+router.use('/ticket-history', authMiddleware, ticketHistoryRoutes);
+router.use('/ticket-attachments', authMiddleware, ticketAttachmentRoutes);
 
 export default router;

@@ -8,6 +8,7 @@ import { TicketPriorityRepository } from '../ticket-priorities/ticket-priority.r
 import { TicketStatusRepository } from '../ticket-statuses/ticket-status.repository';
 import { TicketRepository } from './ticket.repository';
 import { CreateTicketDTO, UpdateTicketDTO } from './ticket.types';
+import { TicketHistoryRepository } from '../ticket-history/ticket-history.repository';
 
 export class TicketService {
   private ticketRepository = new TicketRepository();
@@ -18,16 +19,27 @@ export class TicketService {
   private statusRepository = new TicketStatusRepository();
   private categoryRepository = new TicketCategoryRepository();
   private priorityRepository = new TicketPriorityRepository();
+  private historyRepository = new TicketHistoryRepository();
 
   async create(data: CreateTicketDTO) {
     await this.validateCreateData(data);
 
     const code = await this.generateTicketCode();
 
-    return this.ticketRepository.create({
+    const ticket = await this.ticketRepository.create({
       ...data,
       code,
     });
+
+    await this.historyRepository.create({
+      ticketId: ticket.id,
+      userId: data.createdById,
+      action: 'TICKET_CREATED',
+      oldValue: null,
+      newValue: `Ticket creado con código ${ticket.code}`,
+    });
+
+    return ticket;
   }
 
   async findAll() {
@@ -117,7 +129,11 @@ export class TicketService {
       }
     }
 
-    return this.ticketRepository.update(id, data);
+    const updatedTicket = await this.ticketRepository.update(id, data);
+
+    await this.registerUpdateHistory(currentTicket, updatedTicket, data);
+
+    return updatedTicket;
   }
 
   private async validateCreateData(data: CreateTicketDTO) {
@@ -200,5 +216,86 @@ export class TicketService {
     const nextId = lastTicket ? lastTicket.id + 1 : 1;
 
     return `VT-${String(nextId).padStart(6, '0')}`;
+  }
+
+  private async registerUpdateHistory(
+    currentTicket: any,
+    updatedTicket: any,
+    data: UpdateTicketDTO,
+  ) {
+    const userId = updatedTicket.assignedToId ?? updatedTicket.createdById;
+
+    if (data.statusId && currentTicket.statusId !== data.statusId) {
+      await this.historyRepository.create({
+        ticketId: currentTicket.id,
+        userId,
+        action: 'STATUS_CHANGED',
+        oldValue: currentTicket.status?.name ?? String(currentTicket.statusId),
+        newValue: updatedTicket.status?.name ?? String(data.statusId),
+      });
+    }
+
+    if (data.priorityId && currentTicket.priorityId !== data.priorityId) {
+      await this.historyRepository.create({
+        ticketId: currentTicket.id,
+        userId,
+        action: 'PRIORITY_CHANGED',
+        oldValue: currentTicket.priority?.name ?? String(currentTicket.priorityId),
+        newValue: updatedTicket.priority?.name ?? String(data.priorityId),
+      });
+    }
+
+    if (data.categoryId && currentTicket.categoryId !== data.categoryId) {
+      await this.historyRepository.create({
+        ticketId: currentTicket.id,
+        userId,
+        action: 'CATEGORY_CHANGED',
+        oldValue: currentTicket.category?.name ?? String(currentTicket.categoryId),
+        newValue: updatedTicket.category?.name ?? String(data.categoryId),
+      });
+    }
+
+    if (
+      data.assignedToId &&
+      currentTicket.assignedToId !== data.assignedToId
+    ) {
+      await this.historyRepository.create({
+        ticketId: currentTicket.id,
+        userId,
+        action: 'ASSIGNED_CHANGED',
+        oldValue: currentTicket.assignedTo?.name ?? 'Sin asignar',
+        newValue: updatedTicket.assignedTo?.name ?? String(data.assignedToId),
+      });
+    }
+
+    if (data.title && currentTicket.title !== data.title) {
+      await this.historyRepository.create({
+        ticketId: currentTicket.id,
+        userId,
+        action: 'TITLE_CHANGED',
+        oldValue: currentTicket.title,
+        newValue: data.title,
+      });
+    }
+
+    if (data.description && currentTicket.description !== data.description) {
+      await this.historyRepository.create({
+        ticketId: currentTicket.id,
+        userId,
+        action: 'DESCRIPTION_CHANGED',
+        oldValue: currentTicket.description,
+        newValue: data.description,
+      });
+    }
+
+    if (data.closedAt && !currentTicket.closedAt) {
+      await this.historyRepository.create({
+        ticketId: currentTicket.id,
+        userId,
+        action: 'TICKET_CLOSED',
+        oldValue: null,
+        newValue: 'Ticket cerrado',
+      });
+    }
   }
 }
