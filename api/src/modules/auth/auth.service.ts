@@ -2,6 +2,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../../database/prisma';
 import { LoginDTO } from './auth.types';
+import { env } from '../../config/env';
+
 
 export class AuthService {
   async login(data: LoginDTO) {
@@ -38,10 +40,10 @@ export class AuthService {
         id: user.id,
         email: user.email,
       },
-      process.env.JWT_SECRET as string,
+      env.JWT_SECRET,
       {
-        expiresIn: process.env.JWT_EXPIRES_IN || '1d',
-      }
+        expiresIn: env.JWT_EXPIRES_IN,
+      },
     );
 
     const { password, ...userWithoutPassword } = user;

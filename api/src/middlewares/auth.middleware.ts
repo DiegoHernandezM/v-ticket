@@ -1,30 +1,43 @@
-import { NextFunction, Request, Response } from 'express';
+// src/middlewares/auth.middleware.ts
+
+import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { env } from '../config/env';
+
 
 interface JwtPayload {
   id: number;
   email: string;
 }
 
-export function authMiddleware(req: Request, res: Response, next: NextFunction) {
-  const authorization = req.headers.authorization;
+export function authMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  const authHeader = req.headers.authorization;
 
-  if (!authorization) {
+  if (!authHeader) {
     return res.status(401).json({
+      success: false,
       message: 'Token no proporcionado',
     });
   }
 
-  const [type, token] = authorization.split(' ');
+  const [, token] = authHeader.split(' ');
 
-  if (type !== 'Bearer' || !token) {
+  if (!token) {
     return res.status(401).json({
+      success: false,
       message: 'Formato de token inválido',
     });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
+    const decoded = jwt.verify(
+      token,
+      env.JWT_SECRET,
+    ) as JwtPayload;
 
     req.user = {
       id: decoded.id,
@@ -34,6 +47,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
     return next();
   } catch {
     return res.status(401).json({
+      success: false,
       message: 'Token inválido o expirado',
     });
   }
