@@ -12,45 +12,53 @@ datasource db {
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   name      String
-  email     String    @unique
+  email     String   @unique
   password  String
-  isActive  Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  companyUsers CompanyUser[]
+  companyUsers    CompanyUser[]
+  createdTickets  Ticket[]        @relation("TicketCreatedBy")
+  assignedTickets Ticket[]        @relation("TicketAssignedTo")
+  ticketComments  TicketComment[]
+  ticketHistory   TicketHistory[]
 
   @@map("users")
 }
 
 model Company {
-  id                 Int       @id @default(autoincrement())
+  id                 Int      @id @default(autoincrement())
   name               String
   businessName       String?
-  rfc                String?   @unique
+  rfc                String?  @unique
   email              String?
   phone              String?
   address            String?
   logo               String?
-  subscriptionStatus String    @default("trial")
-  isActive           Boolean   @default(true)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  subscriptionStatus String   @default("trial")
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  companyUsers CompanyUser[]
+  companyUsers     CompanyUser[]
+  clients          Client[]
+  ticketCategories TicketCategory[]
+  ticketPriorities TicketPriority[]
+  tickets          Ticket[]
 
   @@map("companies")
 }
 
 model Role {
-  id          Int       @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   name        String
-  slug        String    @unique
+  slug        String   @unique
   description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   companyUsers CompanyUser[]
 
@@ -72,4 +80,168 @@ model CompanyUser {
 
   @@unique([companyId, userId, roleId])
   @@map("company_users")
+}
+
+model Client {
+  id        Int      @id @default(autoincrement())
+  companyId Int
+  name      String
+  rfc       String?
+  email     String?
+  phone     String?
+  address   String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company  Company   @relation(fields: [companyId], references: [id])
+  contacts Contact[]
+  tickets  Ticket[]
+
+  @@map("clients")
+}
+
+model Contact {
+  id        Int      @id @default(autoincrement())
+  clientId  Int
+  name      String
+  email     String?
+  phone     String?
+  position  String?
+  isPrimary Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client  Client   @relation(fields: [clientId], references: [id])
+  tickets Ticket[]
+
+  @@map("contacts")
+}
+
+model TicketStatus {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique
+  color     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tickets Ticket[]
+
+  @@map("ticket_statuses")
+}
+
+model TicketCategory {
+  id        Int      @id @default(autoincrement())
+  companyId Int
+  name      String
+  slug      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company  @relation(fields: [companyId], references: [id])
+  tickets Ticket[]
+
+  @@unique([companyId, slug])
+  @@map("ticket_categories")
+}
+
+model TicketPriority {
+  id        Int      @id @default(autoincrement())
+  companyId Int
+  name      String
+  slug      String
+  level     Int
+  color     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company  @relation(fields: [companyId], references: [id])
+  tickets Ticket[]
+
+  @@unique([companyId, slug])
+  @@map("ticket_priorities")
+}
+
+model Ticket {
+  id           Int  @id @default(autoincrement())
+  companyId    Int
+  clientId     Int
+  contactId    Int?
+  statusId     Int
+  categoryId   Int?
+  priorityId   Int?
+  createdById  Int
+  assignedToId Int?
+
+  title       String
+  description String
+  code        String @unique
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  closedAt  DateTime?
+
+  company  Company         @relation(fields: [companyId], references: [id])
+  client   Client          @relation(fields: [clientId], references: [id])
+  contact  Contact?        @relation(fields: [contactId], references: [id])
+  status   TicketStatus    @relation(fields: [statusId], references: [id])
+  category TicketCategory? @relation(fields: [categoryId], references: [id])
+  priority TicketPriority? @relation(fields: [priorityId], references: [id])
+
+  createdBy  User  @relation("TicketCreatedBy", fields: [createdById], references: [id])
+  assignedTo User? @relation("TicketAssignedTo", fields: [assignedToId], references: [id])
+
+  comments    TicketComment[]
+  attachments TicketAttachment[]
+  history     TicketHistory[]
+
+  @@map("tickets")
+}
+
+model TicketComment {
+  id         Int      @id @default(autoincrement())
+  ticketId   Int
+  userId     Int
+  comment    String
+  isInternal Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("ticket_comments")
+}
+
+model TicketAttachment {
+  id        Int      @id @default(autoincrement())
+  ticketId  Int
+  fileName  String
+  fileUrl   String
+  mimeType  String?
+  size      Int?
+  createdAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+
+  @@map("ticket_attachments")
+}
+
+model TicketHistory {
+  id        Int      @id @default(autoincrement())
+  ticketId  Int
+  userId    Int?
+  action    String
+  oldValue  String?
+  newValue  String?
+  createdAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+  user   User?  @relation(fields: [userId], references: [id])
+
+  @@map("ticket_history")
 }
