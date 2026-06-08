@@ -1,21 +1,40 @@
 import prisma from '../../database/prisma';
-import { CreateTicketCategoryDTO, UpdateTicketCategoryDTO } from './ticket-category.types';
+import {
+  CreateTicketCategoryDTO,
+  UpdateTicketCategoryDTO,
+} from './ticket-category.types';
 
 export class TicketCategoryRepository {
+  private includeRelations = {
+    company: true,
+  };
+
   async create(data: CreateTicketCategoryDTO) {
     return prisma.ticketCategory.create({
       data,
-      include: {
-        company: true,
-      },
+      include: this.includeRelations,
     });
   }
 
   async findAll() {
     return prisma.ticketCategory.findMany({
-      include: {
-        company: true,
+      where: {
+        isActive: true,
       },
+      include: this.includeRelations,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async findAllByCompany(companyId: number) {
+    return prisma.ticketCategory.findMany({
+      where: {
+        companyId,
+        isActive: true,
+      },
+      include: this.includeRelations,
       orderBy: {
         createdAt: 'desc',
       },
@@ -23,54 +42,78 @@ export class TicketCategoryRepository {
   }
 
   async findById(id: number) {
-    return prisma.ticketCategory.findUnique({
-      where: { id },
-      include: {
-        company: true,
+    return prisma.ticketCategory.findFirst({
+      where: {
+        id,
+        isActive: true,
       },
+      include: this.includeRelations,
+    });
+  }
+
+  async findByIdAndCompany(
+    id: number,
+    companyId: number,
+  ) {
+    return prisma.ticketCategory.findFirst({
+      where: {
+        id,
+        companyId,
+        isActive: true,
+      },
+      include: this.includeRelations,
     });
   }
 
   async findByCompanyId(companyId: number) {
     return prisma.ticketCategory.findMany({
-      where: { companyId: companyId, isActive: true },
-      include: {
-        company: true,
+      where: {
+        companyId,
+        isActive: true,
       },
+      include: this.includeRelations,
       orderBy: {
         createdAt: 'desc',
       },
     });
   }
 
-  async findCompanyAndSlug(companyId: number, slug: string) {
+  async findCompanyAndSlug(
+    companyId: number,
+    slug: string,
+  ) {
     return prisma.ticketCategory.findFirst({
       where: {
-        companyId: companyId,
-        slug: slug
+        companyId,
+        slug,
+        isActive: true,
       },
+      include: this.includeRelations,
     });
   }
-  
-  async update(id: number, data: UpdateTicketCategoryDTO) {
+
+  async update(
+    id: number,
+    data: UpdateTicketCategoryDTO,
+  ) {
     return prisma.ticketCategory.update({
-      where: { id },
-      data,
-      include: {
-        company: true,
+      where: {
+        id,
       },
+      data,
+      include: this.includeRelations,
     });
   }
 
   async delete(id: number) {
     return prisma.ticketCategory.update({
-      where: { id },
+      where: {
+        id,
+      },
       data: {
         isActive: false,
       },
-      include: {
-        company: true,
-      },
+      include: this.includeRelations,
     });
   }
 }

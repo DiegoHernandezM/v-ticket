@@ -48,6 +48,7 @@ model Company {
   ticketCategories TicketCategory[]
   ticketPriorities TicketPriority[]
   tickets          Ticket[]
+  ticketStatuses   TicketStatus[]
 
   @@map("companies")
 }
@@ -120,15 +121,21 @@ model Contact {
 }
 
 model TicketStatus {
-  id        Int      @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
+  companyId Int
   name      String
-  slug      String   @unique
+  slug      String
   color     String?
+  isDefault Boolean @default(false)
+  isActive  Boolean @default(true)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   tickets Ticket[]
+  company Company @relation(fields: [companyId], references: [id])
 
+  @@unique([companyId, slug])
   @@map("ticket_statuses")
 }
 

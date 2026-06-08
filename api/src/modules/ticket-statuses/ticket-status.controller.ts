@@ -5,7 +5,10 @@ export class TicketStatusController {
   private ticketStatusService = new TicketStatusService();
 
   create = async (req: Request, res: Response) => {
-    const status = await this.ticketStatusService.create(req.body);
+    const status = await this.ticketStatusService.create(
+      req.body,
+      req.user!
+    );
 
     return res.status(201).json({
       success: true,
@@ -14,8 +17,10 @@ export class TicketStatusController {
     });
   };
 
-  findAll = async (_req: Request, res: Response) => {
-    const statuses = await this.ticketStatusService.findAll();
+  findAll = async (req: Request, res: Response) => {
+    const statuses = await this.ticketStatusService.findAll(
+      req.user!
+    );
 
     return res.json({
       success: true,
@@ -24,7 +29,10 @@ export class TicketStatusController {
   };
 
   findById = async (req: Request, res: Response) => {
-    const status = await this.ticketStatusService.findById(Number(req.params.id));
+    const status = await this.ticketStatusService.findById(
+      Number(req.params.id),
+      req.user!
+    );
 
     return res.json({
       success: true,
@@ -36,6 +44,7 @@ export class TicketStatusController {
     const status = await this.ticketStatusService.update(
       Number(req.params.id),
       req.body,
+      req.user!
     );
 
     return res.json({
@@ -46,7 +55,10 @@ export class TicketStatusController {
   };
 
   delete = async (req: Request, res: Response) => {
-    const status = await this.ticketStatusService.delete(Number(req.params.id));
+    const status = await this.ticketStatusService.delete(
+      Number(req.params.id),
+      req.user!
+    );
 
     return res.json({
       success: true,
