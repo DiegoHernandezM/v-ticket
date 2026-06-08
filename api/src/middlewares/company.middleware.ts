@@ -12,6 +12,10 @@ export const companyMiddleware = (
     throw new AppError("Usuario no autenticado", 401);
   }
 
+  if (user.role === "super_admin") {
+    return next();
+  }
+
   if (!user.companyId) {
     throw new AppError(
       "El usuario no pertenece a ninguna empresa",

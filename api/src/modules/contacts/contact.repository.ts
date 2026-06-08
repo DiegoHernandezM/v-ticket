@@ -2,20 +2,38 @@ import prisma from '../../database/prisma';
 import { CreateContactDTO, UpdateContactDTO } from './contact.types';
 
 export class ContactRepository {
+  private includeRelations = {
+    client: true,
+  };
+
   async create(data: CreateContactDTO) {
     return prisma.contact.create({
       data,
-      include: {
-        client: true,
-      },
+      include: this.includeRelations,
     });
   }
 
   async findAll() {
     return prisma.contact.findMany({
-      include: {
-        client: true,
+      where: {
+        isActive: true,
       },
+      include: this.includeRelations,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async findAllByCompany(companyId: number) {
+    return prisma.contact.findMany({
+      where: {
+        isActive: true,
+        client: {
+          companyId,
+        },
+      },
+      include: this.includeRelations,
       orderBy: {
         createdAt: 'desc',
       },
@@ -23,11 +41,25 @@ export class ContactRepository {
   }
 
   async findById(id: number) {
-    return prisma.contact.findUnique({
-      where: { id },
-      include: {
-        client: true,
+    return prisma.contact.findFirst({
+      where: {
+        id,
+        isActive: true,
       },
+      include: this.includeRelations,
+    });
+  }
+
+  async findByIdAndCompany(id: number, companyId: number) {
+    return prisma.contact.findFirst({
+      where: {
+        id,
+        isActive: true,
+        client: {
+          companyId,
+        },
+      },
+      include: this.includeRelations,
     });
   }
 
@@ -37,9 +69,26 @@ export class ContactRepository {
         clientId,
         isActive: true,
       },
-      include: {
-        client: true,
+      include: this.includeRelations,
+      orderBy: {
+        createdAt: 'desc',
       },
+    });
+  }
+
+  async findByClientIdAndCompany(
+    clientId: number,
+    companyId: number,
+  ) {
+    return prisma.contact.findMany({
+      where: {
+        clientId,
+        isActive: true,
+        client: {
+          companyId,
+        },
+      },
+      include: this.includeRelations,
       orderBy: {
         createdAt: 'desc',
       },
@@ -60,23 +109,23 @@ export class ContactRepository {
 
   async update(id: number, data: UpdateContactDTO) {
     return prisma.contact.update({
-      where: { id },
-      data,
-      include: {
-        client: true,
+      where: {
+        id,
       },
+      data,
+      include: this.includeRelations,
     });
   }
 
   async delete(id: number) {
     return prisma.contact.update({
-      where: { id },
+      where: {
+        id,
+      },
       data: {
         isActive: false,
       },
-      include: {
-        client: true,
-      },
+      include: this.includeRelations,
     });
   }
 }

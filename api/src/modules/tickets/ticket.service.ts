@@ -8,6 +8,7 @@ import { TicketPriorityRepository } from '../ticket-priorities/ticket-priority.r
 import { TicketStatusRepository } from '../ticket-statuses/ticket-status.repository';
 import { TicketRepository } from './ticket.repository';
 import { CreateTicketDTO, UpdateTicketDTO } from './ticket.types';
+import { AuthUser } from '../../types/auth-user.type';
 import { TicketHistoryRepository } from '../ticket-history/ticket-history.repository';
 
 export class TicketService {
@@ -21,33 +22,59 @@ export class TicketService {
   private priorityRepository = new TicketPriorityRepository();
   private historyRepository = new TicketHistoryRepository();
 
-  async create(data: CreateTicketDTO) {
-    await this.validateCreateData(data);
+  async create(data: CreateTicketDTO, authUser: AuthUser) {
+    const companyId =
+      authUser.role === 'super_admin'
+        ? data.companyId
+        : authUser.companyId;
+
+    if (!companyId) {
+      throw new AppError('No se pudo determinar la empresa del ticket', 400);
+    }
+
+    const payload = {
+      ...data,
+      companyId,
+      createdById: authUser.id,
+    };
+
+    await this.validateCreateData(payload);
 
     const code = await this.generateTicketCode();
 
     const ticket = await this.ticketRepository.create({
-      ...data,
+      ...payload,
       code,
     });
 
     await this.historyRepository.create({
       ticketId: ticket.id,
-      userId: data.createdById,
+      userId: authUser.id,
       action: 'TICKET_CREATED',
-      oldValue: null,
+      oldValue: '',
       newValue: `Ticket creado con código ${ticket.code}`,
     });
 
     return ticket;
   }
 
-  async findAll() {
-    return this.ticketRepository.findAll();
+  async findAll(authUser: AuthUser) {
+    if (authUser.role === 'super_admin') {
+      return this.ticketRepository.findAll();
+    }
+
+    if (!authUser.companyId) {
+      throw new AppError('El usuario no pertenece a ninguna empresa', 403);
+    }
+
+    return this.ticketRepository.findAllByCompany(authUser.companyId);
   }
 
-  async findById(id: number) {
-    const ticket = await this.ticketRepository.findById(id);
+  async findById(id: number, authUser: AuthUser) {
+    const ticket =
+      authUser.role === 'super_admin'
+        ? await this.ticketRepository.findById(id)
+        : await this.ticketRepository.findByIdAndCompany(id, authUser.companyId!);
 
     if (!ticket) {
       throw new AppError('Ticket no encontrado', 404);
@@ -56,8 +83,11 @@ export class TicketService {
     return ticket;
   }
 
-  async findByCode(code: string) {
-    const ticket = await this.ticketRepository.findByCode(code);
+  async findByCode(code: string, authUser: AuthUser) {
+    const ticket =
+      authUser.role === 'super_admin'
+        ? await this.ticketRepository.findByCode(code)
+        : await this.ticketRepository.findByCodeAndCompany(code, authUser.companyId!);
 
     if (!ticket) {
       throw new AppError('Ticket no encontrado', 404);
@@ -66,8 +96,8 @@ export class TicketService {
     return ticket;
   }
 
-  async update(id: number, data: UpdateTicketDTO) {
-    const currentTicket = await this.findById(id);
+  async update(id: number, data: UpdateTicketDTO, authUser: AuthUser) {
+    const currentTicket = await this.findById(id, authUser);
 
     if (data.clientId) {
       const client = await this.clientRepository.findById(data.clientId);
@@ -293,7 +323,7 @@ export class TicketService {
         ticketId: currentTicket.id,
         userId,
         action: 'TICKET_CLOSED',
-        oldValue: null,
+        oldValue: '',
         newValue: 'Ticket cerrado',
       });
     }

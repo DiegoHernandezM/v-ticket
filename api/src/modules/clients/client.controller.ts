@@ -4,8 +4,8 @@ import { ClientService } from './client.service';
 export class ClientController {
   private clientService = new ClientService();
 
-  create = async (req: Request, res: Response) => {
-    const client = await this.clientService.create(req.body);
+  async create(req: Request, res: Response) {
+    const client = await this.clientService.create(req.body, req.user!);
 
     return res.status(201).json({
       success: true,
@@ -14,17 +14,16 @@ export class ClientController {
     });
   };
 
-  findAll = async (_req: Request, res: Response) => {
-    const clients = await this.clientService.findAll();
-
+  async findAll(req: Request, res: Response) {
+    const clients = await this.clientService.findAll(req.user!);
     return res.json({
       success: true,
       data: clients,
     });
   };
 
-  findById = async (req: Request, res: Response) => {
-    const client = await this.clientService.findById(Number(req.params.id));
+  async findById(req: Request, res: Response) {
+    const client = await this.clientService.findById(Number(req.params.id), req.user!);
 
     return res.json({
       success: true,
@@ -32,8 +31,8 @@ export class ClientController {
     });
   };
 
-  update = async (req: Request, res: Response) => {
-    const client = await this.clientService.update(Number(req.params.id), req.body);
+  async update(req: Request, res: Response) {
+    const client = await this.clientService.update(Number(req.params.id), req.body, req.user!);
 
     return res.json({
       success: true,
@@ -42,8 +41,8 @@ export class ClientController {
     });
   };
 
-  delete = async (req: Request, res: Response) => {
-    const client = await this.clientService.delete(Number(req.params.id));
+  async delete(req: Request, res: Response) {
+    const client = await this.clientService.delete(Number(req.params.id), req.user!);
 
     return res.json({
       success: true,

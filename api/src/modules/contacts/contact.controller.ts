@@ -5,7 +5,10 @@ export class ContactController {
   private contactService = new ContactService();
 
   create = async (req: Request, res: Response) => {
-    const contact = await this.contactService.create(req.body);
+    const contact = await this.contactService.create(
+      req.body,
+      req.user!
+    );
 
     return res.status(201).json({
       success: true,
@@ -14,8 +17,8 @@ export class ContactController {
     });
   };
 
-  findAll = async (_req: Request, res: Response) => {
-    const contacts = await this.contactService.findAll();
+  findAll = async (req: Request, res: Response) => {
+    const contacts = await this.contactService.findAll(req.user!);
 
     return res.json({
       success: true,
@@ -24,7 +27,10 @@ export class ContactController {
   };
 
   findById = async (req: Request, res: Response) => {
-    const contact = await this.contactService.findById(Number(req.params.id));
+    const contact = await this.contactService.findById(
+      Number(req.params.id),
+      req.user!
+    );
 
     return res.json({
       success: true,
@@ -35,6 +41,7 @@ export class ContactController {
   findByClientId = async (req: Request, res: Response) => {
     const contacts = await this.contactService.findByClientId(
       Number(req.params.clientId),
+      req.user!
     );
 
     return res.json({
@@ -47,6 +54,7 @@ export class ContactController {
     const contact = await this.contactService.update(
       Number(req.params.id),
       req.body,
+      req.user!
     );
 
     return res.json({
@@ -57,7 +65,10 @@ export class ContactController {
   };
 
   delete = async (req: Request, res: Response) => {
-    const contact = await this.contactService.delete(Number(req.params.id));
+    const contact = await this.contactService.delete(
+      Number(req.params.id),
+      req.user!
+    );
 
     return res.json({
       success: true,

@@ -8,11 +8,12 @@ const router = Router();
 const controller =
   new TicketPriorityController();
 
-router.post('/', roleMiddleware("super_admin","admin", "ticket_manager"), asyncHandler(controller.create));
-router.get('/', roleMiddleware("super_admin","admin", "ticket_manager"), asyncHandler(controller.create));
-router.get('/', roleMiddleware("super_admin","admin", "ticket_manager"), asyncHandler(controller.findAll));
-router.get('/:id', roleMiddleware("super_admin","admin", "ticket_manager"), asyncHandler(controller.findById));
-router.put('/:id', roleMiddleware("super_admin","admin", "ticket_manager"), asyncHandler(controller.update));
-router.delete('/:id', roleMiddleware("super_admin","admin", "ticket_manager"), asyncHandler(controller.delete));
+
+router.post('/', roleMiddleware("super_admin","admin", "ticket_manager"), asyncHandler((req, res) => controller.create(req, res)));
+router.get('/', roleMiddleware("super_admin","admin", "ticket_manager"), asyncHandler((req, res) => controller.create(req, res)));
+router.get('/', roleMiddleware("super_admin","admin", "ticket_manager"), asyncHandler((req, res) => controller.findAll(req, res)));
+router.get('/:id', roleMiddleware("super_admin","admin", "ticket_manager"), asyncHandler((req, res) => controller.findById(req, res)));
+router.put('/:id', roleMiddleware("super_admin","admin", "ticket_manager"), asyncHandler((req, res) => controller.update(req, res)));
+router.delete('/:id', roleMiddleware("super_admin","admin", "ticket_manager"), asyncHandler((req, res) => controller.delete(req, res)));
 
 export default router;

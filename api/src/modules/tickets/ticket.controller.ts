@@ -4,53 +4,58 @@ import { TicketService } from './ticket.service';
 export class TicketController {
   private ticketService = new TicketService();
 
-  create = async (req: Request, res: Response) => {
-    const ticket = await this.ticketService.create(req.body);
+  async create(req: Request, res: Response) {
+    const ticket = await this.ticketService.create(req.body, req.user!);
 
     return res.status(201).json({
-      success: true,
       message: 'Ticket creado correctamente',
       data: ticket,
     });
-  };
+  }
 
-  findAll = async (_req: Request, res: Response) => {
-    const tickets = await this.ticketService.findAll();
+  async findAll(req: Request, res: Response) {
+    const tickets = await this.ticketService.findAll(req.user!);
 
     return res.json({
-      success: true,
+      message: 'Tickets obtenidos correctamente',
       data: tickets,
     });
-  };
+  }
 
-  findById = async (req: Request, res: Response) => {
-    const ticket = await this.ticketService.findById(Number(req.params.id));
-
-    return res.json({
-      success: true,
-      data: ticket,
-    });
-  };
-
-  findByCode = async (req: Request, res: Response) => {
-    const ticket = await this.ticketService.findByCode(req.params.code);
-
-    return res.json({
-      success: true,
-      data: ticket,
-    });
-  };
-
-  update = async (req: Request, res: Response) => {
-    const ticket = await this.ticketService.update(
+  async findById(req: Request, res: Response) {
+    const ticket = await this.ticketService.findById(
       Number(req.params.id),
-      req.body,
+      req.user!
     );
 
     return res.json({
-      success: true,
+      message: 'Ticket obtenido correctamente',
+      data: ticket,
+    });
+  }
+
+  async findByCode(req: Request, res: Response) {
+    const ticket = await this.ticketService.findByCode(
+      req.params.code,
+      req.user!
+    );
+
+    return res.json({
+      message: 'Ticket obtenido correctamente',
+      data: ticket,
+    });
+  }
+
+  async update(req: Request, res: Response) {
+    const ticket = await this.ticketService.update(
+      Number(req.params.id),
+      req.body,
+      req.user!
+    );
+
+    return res.json({
       message: 'Ticket actualizado correctamente',
       data: ticket,
     });
-  };
+  }
 }

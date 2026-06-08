@@ -5,10 +5,10 @@ declare global {
         id: number;
         email: string;
         role: string;
-        companyId?: number;
+        companyId: number | null;
       };
     }
   }
 }
 
-export {};
+export { };

@@ -75,4 +75,39 @@ export class TicketRepository {
       history: true,
     };
   }
+
+  async findAllByCompany(companyId: number) {
+    return prisma.ticket.findMany({
+      where: {
+        companyId,
+        isActive: true,
+      },
+      include: this.defaultInclude(),
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async findByIdAndCompany(id: number, companyId: number) {
+    return prisma.ticket.findFirst({
+      where: {
+        id,
+        companyId,
+        isActive: true,
+      },
+      include: this.defaultInclude(),
+    });
+  }
+
+  async findByCodeAndCompany(code: string, companyId: number) {
+    return prisma.ticket.findFirst({
+      where: {
+        code,
+        companyId,
+        isActive: true,
+      },
+      include: this.defaultInclude(),
+    });
+  }
 }

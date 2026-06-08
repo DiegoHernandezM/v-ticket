@@ -9,7 +9,7 @@ interface JwtPayload {
   id: number;
   email: string;
   role: string;
-  companyId: number;
+  companyId: number | null;
 }
 
 export function authMiddleware(
