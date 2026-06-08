@@ -35,10 +35,22 @@ export class AuthService {
       throw new Error('Usuario inactivo');
     }
 
+    const companyUser = user.companyUsers[0];
+
+    const superAdminRelation = user.companyUsers.find(
+      (companyUser) => companyUser.role.name === "super_admin"
+    );
+
+    if (!companyUser && !superAdminRelation) {
+      throw new Error("El usuario no pertenece a ninguna empresa");
+    }
+
     const token = jwt.sign(
       {
         id: user.id,
         email: user.email,
+        role: superAdminRelation ? "super_admin" : companyUser?.role.slug,
+        companyId: companyUser?.companyId ?? null,
       },
       env.JWT_SECRET,
       {

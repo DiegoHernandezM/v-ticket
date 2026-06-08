@@ -8,6 +8,8 @@ import { env } from '../config/env';
 interface JwtPayload {
   id: number;
   email: string;
+  role: string;
+  companyId: number;
 }
 
 export function authMiddleware(
@@ -41,7 +43,9 @@ export function authMiddleware(
 
     req.user = {
       id: decoded.id,
-      email: decoded.email,
+      email: decoded.email, 
+      role: decoded.role,
+      companyId: decoded.companyId,
     };
 
     return next();
