@@ -5,7 +5,10 @@ export class TicketCommentController {
   private service = new TicketCommentService();
 
   create = async (req: Request, res: Response) => {
-    const comment = await this.service.create(req.body);
+    const comment = await this.service.create(
+      req.body,
+      req.user!,
+    );
 
     return res.status(201).json({
       success: true,
@@ -14,8 +17,10 @@ export class TicketCommentController {
     });
   };
 
-  findAll = async (_req: Request, res: Response) => {
-    const comments = await this.service.findAll();
+  findAll = async (req: Request, res: Response) => {
+    const comments = await this.service.findAll(
+      req.user!,
+    );
 
     return res.json({
       success: true,
@@ -24,7 +29,10 @@ export class TicketCommentController {
   };
 
   findById = async (req: Request, res: Response) => {
-    const comment = await this.service.findById(Number(req.params.id));
+    const comment = await this.service.findById(
+      Number(req.params.id),
+      req.user!,
+    );
 
     return res.json({
       success: true,
@@ -35,6 +43,7 @@ export class TicketCommentController {
   findByTicketId = async (req: Request, res: Response) => {
     const comments = await this.service.findByTicketId(
       Number(req.params.ticketId),
+      req.user!,
     );
 
     return res.json({
@@ -44,7 +53,11 @@ export class TicketCommentController {
   };
 
   update = async (req: Request, res: Response) => {
-    const comment = await this.service.update(Number(req.params.id), req.body);
+    const comment = await this.service.update(
+      Number(req.params.id),
+      req.body,
+      req.user!,
+    );
 
     return res.json({
       success: true,
@@ -54,7 +67,10 @@ export class TicketCommentController {
   };
 
   delete = async (req: Request, res: Response) => {
-    await this.service.delete(Number(req.params.id));
+    await this.service.delete(
+      Number(req.params.id),
+      req.user!,
+    );
 
     return res.json({
       success: true,

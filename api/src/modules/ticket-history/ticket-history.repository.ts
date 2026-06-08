@@ -18,9 +18,40 @@ export class TicketHistoryRepository {
     });
   }
 
+  async findAllByCompany(companyId: number) {
+    return prisma.ticketHistory.findMany({
+      where: {
+        ticket: {
+          companyId,
+        },
+      },
+      include: this.defaultInclude(),
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
   async findById(id: number) {
     return prisma.ticketHistory.findUnique({
-      where: { id },
+      where: {
+        id,
+      },
+      include: this.defaultInclude(),
+    });
+  }
+
+  async findByIdAndCompany(
+    id: number,
+    companyId: number,
+  ) {
+    return prisma.ticketHistory.findFirst({
+      where: {
+        id,
+        ticket: {
+          companyId,
+        },
+      },
       include: this.defaultInclude(),
     });
   }
@@ -29,6 +60,24 @@ export class TicketHistoryRepository {
     return prisma.ticketHistory.findMany({
       where: {
         ticketId,
+      },
+      include: this.defaultInclude(),
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+  }
+
+  async findByTicketIdAndCompany(
+    ticketId: number,
+    companyId: number,
+  ) {
+    return prisma.ticketHistory.findMany({
+      where: {
+        ticketId,
+        ticket: {
+          companyId,
+        },
       },
       include: this.defaultInclude(),
       orderBy: {

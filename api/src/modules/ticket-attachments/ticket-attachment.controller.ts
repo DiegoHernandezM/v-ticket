@@ -5,7 +5,10 @@ export class TicketAttachmentController {
   private service = new TicketAttachmentService();
 
   create = async (req: Request, res: Response) => {
-    const attachment = await this.service.create(req.body);
+    const attachment = await this.service.create(
+      req.body,
+      req.user!,
+    );
 
     return res.status(201).json({
       success: true,
@@ -14,8 +17,10 @@ export class TicketAttachmentController {
     });
   };
 
-  findAll = async (_req: Request, res: Response) => {
-    const attachments = await this.service.findAll();
+  findAll = async (req: Request, res: Response) => {
+    const attachments = await this.service.findAll(
+      req.user!,
+    );
 
     return res.json({
       success: true,
@@ -24,7 +29,10 @@ export class TicketAttachmentController {
   };
 
   findById = async (req: Request, res: Response) => {
-    const attachment = await this.service.findById(Number(req.params.id));
+    const attachment = await this.service.findById(
+      Number(req.params.id),
+      req.user!,
+    );
 
     return res.json({
       success: true,
@@ -35,6 +43,7 @@ export class TicketAttachmentController {
   findByTicketId = async (req: Request, res: Response) => {
     const attachments = await this.service.findByTicketId(
       Number(req.params.ticketId),
+      req.user!,
     );
 
     return res.json({
@@ -44,7 +53,10 @@ export class TicketAttachmentController {
   };
 
   delete = async (req: Request, res: Response) => {
-    const attachment = await this.service.delete(Number(req.params.id));
+    const attachment = await this.service.delete(
+      Number(req.params.id),
+      req.user!,
+    );
 
     return res.json({
       success: true,
@@ -63,13 +75,16 @@ export class TicketAttachmentController {
       });
     }
 
-    const attachment = await this.service.create({
-      ticketId: Number(req.body.ticketId),
-      fileName: file.originalname,
-      fileUrl: `/uploads/tickets/${file.filename}`,
-      mimeType: file.mimetype,
-      size: file.size,
-    });
+    const attachment = await this.service.create(
+      {
+        ticketId: Number(req.body.ticketId),
+        fileName: file.originalname,
+        fileUrl: `/uploads/tickets/${file.filename}`,
+        mimeType: file.mimetype,
+        size: file.size,
+      },
+      req.user!,
+    );
 
     return res.status(201).json({
       success: true,
