@@ -1,0 +1,52 @@
+import { Router } from 'express';
+import { HelpDeskTeamMemberController } from './help-desk-team-member.controller';
+import { asyncHandler } from '../../utils/async-handler';
+import { roleMiddleware } from '../../middlewares/role.middleware';
+import { companyMiddleware } from '../../middlewares/company.middleware';
+
+const router = Router();
+const controller = new HelpDeskTeamMemberController();
+
+router.post(
+  '/',
+  roleMiddleware('super_admin', 'admin', 'ticket_manager'),
+  companyMiddleware,
+  asyncHandler((req, res) => controller.create(req, res))
+);
+
+router.get(
+  '/',
+  roleMiddleware('super_admin', 'admin', 'ticket_manager', 'engineer'),
+  companyMiddleware,
+  asyncHandler((req, res) => controller.findAll(req, res))
+);
+
+router.get(
+  '/team/:teamId',
+  roleMiddleware('super_admin', 'admin', 'ticket_manager', 'engineer'),
+  companyMiddleware,
+  asyncHandler((req, res) => controller.findByTeamId(req, res))
+);
+
+router.get(
+  '/:id',
+  roleMiddleware('super_admin', 'admin', 'ticket_manager', 'engineer'),
+  companyMiddleware,
+  asyncHandler((req, res) => controller.findById(req, res))
+);
+
+router.put(
+  '/:id',
+  roleMiddleware('super_admin', 'admin', 'ticket_manager'),
+  companyMiddleware,
+  asyncHandler((req, res) => controller.update(req, res))
+);
+
+router.delete(
+  '/:id',
+  roleMiddleware('super_admin', 'admin', 'ticket_manager'),
+  companyMiddleware,
+  asyncHandler((req, res) => controller.delete(req, res))
+);
+
+export default router;

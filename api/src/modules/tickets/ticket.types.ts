@@ -7,6 +7,7 @@ export interface CreateTicketDTO {
   priorityId?: number;
   createdById: number;
   assignedToId?: number;
+  helpDeskTeamId?: number;
   title: string;
   description: string;
 }
@@ -18,7 +19,12 @@ export interface UpdateTicketDTO {
   categoryId?: number | null;
   priorityId?: number | null;
   assignedToId?: number | null;
-  title?: string;
-  description?: string;
+  title?: string | null;
+  description?: string | null;
+  helpDeskTeamId?: number | null;
   closedAt?: Date | null;
+}
+
+export interface AssignTicketDTO {
+  assignedToId: number;
 }

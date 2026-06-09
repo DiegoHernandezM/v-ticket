@@ -58,4 +58,18 @@ export class TicketController {
       data: ticket,
     });
   }
+
+  assign = async (req: Request, res: Response) => {
+    const ticket = await this.ticketService.assign(
+      Number(req.params.id),
+      req.body,
+      req.user!
+    );
+
+    return res.json({
+      success: true,
+      message: 'Ticket reasignado correctamente',
+      data: ticket,
+    });
+  };
 }

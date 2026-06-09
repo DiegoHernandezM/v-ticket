@@ -83,4 +83,18 @@ export class UserRepository {
       },
     });
   }
+
+  async findByIdWithCompanyRoles(id: number) {
+    return prisma.user.findUnique({
+      where: { id },
+      include: {
+        companyUsers: {
+          include: {
+            company: true,
+            role: true,
+          },
+        },
+      },
+    });
+  }
 }

@@ -110,4 +110,14 @@ export class TicketRepository {
       include: this.defaultInclude(),
     });
   }
+
+  async assign(id: number, assignedToId: number) {
+    return prisma.ticket.update({
+      where: { id },
+      data: {
+        assignedToId,
+      },
+      include: this.defaultInclude(),
+    });
+  }
 }

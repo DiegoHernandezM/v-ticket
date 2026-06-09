@@ -7,9 +7,10 @@ import { TicketCategoryRepository } from '../ticket-categories/ticket-category.r
 import { TicketPriorityRepository } from '../ticket-priorities/ticket-priority.repository';
 import { TicketStatusRepository } from '../ticket-statuses/ticket-status.repository';
 import { TicketRepository } from './ticket.repository';
-import { CreateTicketDTO, UpdateTicketDTO } from './ticket.types';
+import { CreateTicketDTO, UpdateTicketDTO, AssignTicketDTO } from './ticket.types';
 import { AuthUser } from '../../types/auth-user.type';
 import { TicketHistoryRepository } from '../ticket-history/ticket-history.repository';
+import prisma from '../../database/prisma';
 
 export class TicketService {
   private ticketRepository = new TicketRepository();
@@ -40,10 +41,15 @@ export class TicketService {
 
     await this.validateCreateData(payload);
 
+    const assignedToId = data.helpDeskTeamId
+      ? await this.getEngineerWithLessLoad(data.helpDeskTeamId, companyId)
+      : data.assignedToId;
+
     const code = await this.generateTicketCode();
 
     const ticket = await this.ticketRepository.create({
       ...payload,
+      assignedToId,
       code,
     });
 
@@ -54,6 +60,16 @@ export class TicketService {
       oldValue: '',
       newValue: `Ticket creado con código ${ticket.code}`,
     });
+
+    if (assignedToId) {
+      await this.historyRepository.create({
+        ticketId: ticket.id,
+        userId: authUser.id,
+        action: 'TICKET_ASSIGNED',
+        oldValue: '',
+        newValue: `Ticket asignado automáticamente al usuario ${assignedToId}`,
+      });
+    }
 
     return ticket;
   }
@@ -327,5 +343,121 @@ export class TicketService {
         newValue: 'Ticket cerrado',
       });
     }
+  }
+
+  async assign(id: number, data: AssignTicketDTO, authUser: AuthUser) {
+    const ticket = await this.findById(id, authUser);
+
+    const user = await this.userRepository.findByIdWithCompanyRoles(
+      data.assignedToId
+    );
+
+    if (!user) {
+      throw new AppError('Usuario asignado no encontrado', 404);
+    }
+
+    const belongsToCompany = user.companyUsers.some(
+      (companyUser: any) =>
+        companyUser.companyId === ticket.companyId &&
+        companyUser.isActive === true
+    );
+
+    if (!belongsToCompany) {
+      throw new AppError(
+        'El usuario no pertenece a la empresa del ticket',
+        403
+      );
+    }
+
+    const isEngineer = user.companyUsers.some(
+      (companyUser: any) =>
+        companyUser.companyId === ticket.companyId &&
+        companyUser.isActive === true &&
+        companyUser.role?.slug === 'engineer'
+    );
+
+    if (!isEngineer) {
+      throw new AppError(
+        'Solo puedes asignar tickets a usuarios con rol engineer',
+        400
+      );
+    }
+
+    const oldAssignedToId = ticket.assignedToId ?? null;
+
+    const updatedTicket = await this.ticketRepository.assign(
+      id,
+      data.assignedToId
+    );
+
+    await this.historyRepository.create({
+      ticketId: ticket.id,
+      userId: authUser.id,
+      action: 'TICKET_REASSIGNED',
+      oldValue: oldAssignedToId ? String(oldAssignedToId) : '',
+      newValue: String(data.assignedToId),
+    });
+
+    return updatedTicket;
+  }
+
+  private async getEngineerWithLessLoad(helpDeskTeamId: number, companyId: number) {
+    const members = await prisma.helpDeskTeamMember.findMany({
+      where: {
+        teamId: helpDeskTeamId,
+        isActive: true,
+        team: {
+          companyId,
+          isActive: true,
+        },
+        user: {
+          isActive: true,
+          companyUsers: {
+            some: {
+              companyId,
+              isActive: true,
+              role: {
+                slug: 'engineer',
+              },
+            },
+          },
+        },
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    if (!members.length) {
+      throw new AppError(
+        'No hay ingenieros activos disponibles en la mesa de ayuda',
+        400
+      );
+    }
+
+    const loads = await Promise.all(
+      members.map(async member => {
+        const totalTickets = await prisma.ticket.count({
+          where: {
+            companyId,
+            assignedToId: member.userId,
+            status: {
+              slug: {
+                not: 'closed',
+              },
+            },
+          },
+        });
+
+        return {
+          userId: member.userId,
+          totalTickets,
+        };
+      })
+    );
+
+    loads.sort((a, b) => a.totalTickets - b.totalTickets);
+
+    return loads[0].userId;
   }
 }
