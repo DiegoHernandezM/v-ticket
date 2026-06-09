@@ -16,6 +16,7 @@ import ticketHistoryRoutes from '../modules/ticket-history/ticket-history.routes
 import ticketAttachmentRoutes from '../modules/ticket-attachments/ticket-attachment.routes';
 import helpDeskTeamRoutes from '../modules/help-desk-teams/help-desk-team.routes';
 import helpDeskTeamMemberRoutes from '../modules/help-desk-team-members/help-desk-team-member.routes';
+import dashboardRoutes from '../modules/dashboard/dashboard.routes';
 
 const router = Router();
 
@@ -36,6 +37,7 @@ router.use('/ticket-history', authMiddleware, ticketHistoryRoutes);
 router.use('/ticket-attachments', authMiddleware, ticketAttachmentRoutes);
 router.use('/help-desk-teams', authMiddleware,helpDeskTeamRoutes);
 router.use('/help-desk-team-members', authMiddleware, helpDeskTeamMemberRoutes);
+router.use('/dashboard', authMiddleware, dashboardRoutes);
 
 
 export default router;

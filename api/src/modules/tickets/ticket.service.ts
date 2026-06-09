@@ -11,6 +11,7 @@ import { CreateTicketDTO, UpdateTicketDTO, AssignTicketDTO } from './ticket.type
 import { AuthUser } from '../../types/auth-user.type';
 import { TicketHistoryRepository } from '../ticket-history/ticket-history.repository';
 import prisma from '../../database/prisma';
+import { MailService } from '../../services/mail.service';
 
 export class TicketService {
   private ticketRepository = new TicketRepository();
@@ -22,6 +23,7 @@ export class TicketService {
   private categoryRepository = new TicketCategoryRepository();
   private priorityRepository = new TicketPriorityRepository();
   private historyRepository = new TicketHistoryRepository();
+  private mailService = new MailService();
 
   async create(data: CreateTicketDTO, authUser: AuthUser) {
     const companyId =
@@ -70,6 +72,9 @@ export class TicketService {
         newValue: `Ticket asignado automáticamente al usuario ${assignedToId}`,
       });
     }
+
+    await this.sendTicketCreatedEmail(ticket);
+    await this.sendTicketAssignedEmail(ticket);
 
     return ticket;
   }
@@ -459,5 +464,56 @@ export class TicketService {
     loads.sort((a, b) => a.totalTickets - b.totalTickets);
 
     return loads[0].userId;
+  }
+
+  private async sendTicketCreatedEmail(ticket: any) {
+    try {
+      const email = ticket.contact?.email || ticket.client?.email;
+
+      if (!email) {
+        return;
+      }
+
+      await this.mailService.sendMail({
+        to: email,
+        subject: `Ticket creado - ${ticket.code}`,
+        html: `
+        <h2>Tu ticket fue creado correctamente</h2>
+        <p>Hola ${ticket.contact?.name || ticket.client?.name || ''},</p>
+        <p>Tu solicitud fue registrada correctamente.</p>
+        <p><strong>Folio:</strong> ${ticket.code}</p>
+        <p><strong>Título:</strong> ${ticket.title}</p>
+        <p><strong>Descripción:</strong> ${ticket.description}</p>
+        <br>
+        <p>Nos pondremos en contacto contigo cuando tengamos una actualización.</p>
+      `,
+      });
+    } catch (error) {
+      console.error('Error enviando correo de ticket creado:', error);
+    }
+  }
+
+  private async sendTicketAssignedEmail(ticket: any) {
+    try {
+      if (!ticket.assignedTo?.email) {
+        return;
+      }
+
+      await this.mailService.sendMail({
+        to: ticket.assignedTo.email,
+        subject: `Nuevo ticket asignado - ${ticket.code}`,
+        html: `
+        <h2>Se te asignó un nuevo ticket</h2>
+        <p>Hola ${ticket.assignedTo.name},</p>
+        <p>Tienes un nuevo ticket asignado.</p>
+        <p><strong>Folio:</strong> ${ticket.code}</p>
+        <p><strong>Título:</strong> ${ticket.title}</p>
+        <p><strong>Prioridad:</strong> ${ticket.priority?.name || 'Sin prioridad'}</p>
+        <p><strong>Cliente:</strong> ${ticket.client?.name || 'Sin cliente'}</p>
+      `,
+      });
+    } catch (error) {
+      console.error('Error enviando correo de ticket asignado:', error);
+    }
   }
 }
