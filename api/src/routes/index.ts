@@ -17,6 +17,9 @@ import ticketAttachmentRoutes from '../modules/ticket-attachments/ticket-attachm
 import helpDeskTeamRoutes from '../modules/help-desk-teams/help-desk-team.routes';
 import helpDeskTeamMemberRoutes from '../modules/help-desk-team-members/help-desk-team-member.routes';
 import dashboardRoutes from '../modules/dashboard/dashboard.routes';
+import notificationRoutes from '../modules/notifications/notification.routes';
+import subscriptionPlanRoutes from '../modules/subscription-plans/subscription-plan.routes';
+import companySubscriptionRoutes from '../modules/company-subscriptions/company-subscription.routes';
 
 const router = Router();
 
@@ -38,6 +41,8 @@ router.use('/ticket-attachments', authMiddleware, ticketAttachmentRoutes);
 router.use('/help-desk-teams', authMiddleware,helpDeskTeamRoutes);
 router.use('/help-desk-team-members', authMiddleware, helpDeskTeamMemberRoutes);
 router.use('/dashboard', authMiddleware, dashboardRoutes);
-
+router.use('/subscription-plans', authMiddleware, subscriptionPlanRoutes);
+router.use('/notifications', authMiddleware, notificationRoutes);
+router.use('/company-subscriptions', authMiddleware, companySubscriptionRoutes);
 
 export default router;

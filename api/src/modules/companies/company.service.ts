@@ -1,9 +1,15 @@
 import { CompanyRepository } from './company.repository';
 import { CreateCompanyDTO, UpdateCompanyDTO } from './company.types';
 import { AppError } from '../../utils/app-error';
+import { SubscriptionPlanRepository } from '../subscription-plans/subscription-plan.repository';
+import { CompanySubscriptionRepository } from '../company-subscriptions/company-subscription.repository';
+
+
 
 export class CompanyService {
   private companyRepository = new CompanyRepository();
+  private subscriptionPlanRepository = new SubscriptionPlanRepository();
+  private companySubscriptionRepository = new CompanySubscriptionRepository();
 
   async create(data: CreateCompanyDTO) {
     const companyWithSameRfc = data.rfc
@@ -14,7 +20,26 @@ export class CompanyService {
       throw new AppError('Ya existe una empresa registrada con ese RFC', 400);
     }
 
-    return this.companyRepository.create(data);
+    const company = await this.companyRepository.create({
+      ...data,
+      subscriptionStatus: 'trial',
+    });
+
+    const trialPlan = await this.subscriptionPlanRepository.findBySlug('trial');
+
+    if (!trialPlan) {
+      throw new AppError('El plan Trial no existe', 404);
+    }
+
+    await this.companySubscriptionRepository.create({
+      companyId: company.id,
+      planId: trialPlan.id,
+      status: 'trial',
+      startsAt: new Date(),
+      trialEndsAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+    });
+
+    return company;
   }
 
   async findAll() {

@@ -2,6 +2,7 @@ import prisma from '../../database/prisma';
 import { CreateCompanyDTO, UpdateCompanyDTO } from './company.types';
 
 export class CompanyRepository {
+  
   async create(data: CreateCompanyDTO) {
     return prisma.company.create({
       data,
